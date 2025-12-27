@@ -1,0 +1,17 @@
+build/
+bin/
+lib/
+*.o
+*.a
+*.so
+*.exe
+ProjectBeta
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+decomp/
+JavaBetaSrc/
+javabin/
+rawconvertedsources/    

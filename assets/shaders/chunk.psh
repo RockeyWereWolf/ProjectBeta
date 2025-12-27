@@ -1,0 +1,17 @@
+struct PSInput {
+    float4 Pos : SV_POSITION;
+    float3 Col : COLOR0;
+    float2 UV  : TEX_COORD;
+};
+
+struct PSOutput {
+    float4 Color : SV_TARGET;
+};
+
+void main(in  PSInput PSIn,
+          out PSOutput PSOut)
+{
+    // Return vertex color (Classic Minecraft lighting look)
+    // We aren't binding textures yet, so this will look like untextured colored blocks
+    PSOut.Color = float4(PSIn.Col, 1.0);
+}
