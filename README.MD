@@ -13,14 +13,20 @@ This project relies heavily on **[RetroMCP-Java](https://github.com/MCPHackers/R
 
 ## Current State
 
-
 ### What Works / Matches Visually
 *   **Terrain Shape:** The overall hills, mountains, and valleys look identical to the original game.
-*   **Biome Map:** Biomes are seem to be placed correctly using the original lookup textures.
+*   **Biome Map:** Biomes seem to be placed correctly using the original lookup textures.
 *   **Noise Math:** Ported the Perlin and Simplex noise algorithms, and they match Java's output to ~15 decimal places in isolation.
+*   **RNG Sync (`4 4 3 3`):** Previous concerns about the Stone Depth sequence (`4 4 3 3`) being a bug were proved wrong. Detailed Java debugging (`tools/DebugRealStoneDepth.java`) confirmed that the original game produces this exact sequence when Sandstone generation consumes random numbers. The C++ implementation correctly matches this behavior.
 
 ### Known Issues / In Progress
-*   **The "Sandstone Offset":** In specific chunks (like 0,0), terrain density calculates slightly differently, putting the surface at `y=59` instead of `y=58`. This triggers a Sandstone generation check that Java doesn't do, which desynchronizes the RNG for the rest of the chunk. See note in **Debugging & Tools** to understand the to what chunks and heights I refer to.
+*   **The "Sandstone/Surface Anomaly":** There is a persistent ambiguity regarding vertical alignment at specific coordinates (e.g., Chunk 0,0), depending on which ground truth you trust:
+    *   **The Facts:** In this C++ clone, the surface is at `y=63`, Sandstone generates at `y=58`, and there are **5 blocks of sand**.
+    *   **Java Observation:** In the real game, digging reveals **5 blocks of sand** above the sandstone.
+    *   **The Ambiguity:**
+        *   *If the WorldVerifier is correct:* It reports Java Sandstone at `y=58`. This implies Java Surface is `63` (58+5). In this case, **both Surface and Sandstone heights match perfectly**.
+        *   *If [Minecraft Forums](https://www.minecraftforum.net/forums/minecraft-java-edition/survival-mode/213768-do-you-fence-in-your-minecraft-yard-poll?page=2) (F3 logic) are correct:* F3 indicates standing on block `y=59`. This implies Java Surface is `64` (59+5). In this case, **the C++ terrain generated 1 block too low**.
+        
 *   **Decorations:**
     *   Grass/Sand transitions on beaches look a bit rougher/chaotic than vanilla.
     *   Clay is currently missing. Not implemented yet.
@@ -35,16 +41,24 @@ To help debug the generation, I've included a `src/tools/` folder.
 *   **C++ Tests:** These are standalone C++ programs that run specific parts of the generation logic (like `TestDecisions.cpp`) to compare against the Java output.
 
 **Note:** The current build is **hardcoded to Seed -100**. 
-I used this seed for all programmatic parity checks. The `DebugWorld/` folder in this repo contains a saved vanilla Beta 1.7.3 world with this seed if you want to compare blocks manually. There is a `src/tools/WorldVerifier.cpp` that is coded to use this `DebugWorld`. If you don't want to debug this, you will need to consider changing `main.cpp` and `CMakeLists.txt` to ignore this source file and de-hardcode the seed.   
+I used this seed for all programmatic parity checks. 
 
-## The "Parity" Problem
+**Note on Verification:**
+The `src/tools/WorldVerifier.cpp` tool is hardcoded to look for region files in a specific path on my local machine. The `DebugWorld` folder in this repo is currently empty. If you want to run the verifier, you must provide your own Beta 1.7.3 region files and update the path in the code.
 
-Even with identical logic, the C++ build produces a slightly different terrain density than Java in the main project structure (`4 4 3 3` depth pattern vs `4 4 4 4`). 
+## The RNG Depth Desync Problem
 
-What I tried:
-*   Standardizing RNG (bit-perfect match).
-*   Compiler flags (`-ffloat-store`, `-fno-fast-math`, `-O0`).
-*   Architecture changes (stack vs heap allocation).
+I spent days chasing a ghost regarding floating-point determinism and compiler behavior. 
+
+I initially thought the RNG was desynchronizing because this C++ project output a Stone Depth pattern of `4 4 3 3` while the isolated test tool output `4 4 4 4`. I blamed everything: GCC optimizations, `-ffast-math`, stack vs heap allocation, and even the OS kernel.
+
+**The Twist:**
+It turned out the "failing" main project was actually **correct**. 
+*   The isolated test (`TestDecisions.cpp`) used a Mock Chunk filled with stone, which prevented "Sandstone" generation logic from ever running. This caused it to skip an RNG call, yielding the "clean" `4 4 4 4` pattern.
+*   The main project generated real terrain, which triggered Sandstone, consumed the RNG, and produced `4 4 3 3`.
+*   I verified that Java **also** produces `4 4 3 3` when Sandstone generates.
+
+So the code is logically consistent. The remaining discrepancies (like the potential 1-block surface offset) are likely due to microscopic floating-point accumulation errors in the trilinear interpolation loop that differ between the JVM's `strictfp` and C++ binaries, or simply a logic difference I haven't spotted yet.
 
 It might be a compiler bug, a weird optimization in GCC 15, or maybe I just missed something obvious. If you are a wizard with floating-point math or decompiled Java, feel free to take a look.
 

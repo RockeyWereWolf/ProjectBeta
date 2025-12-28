@@ -17,6 +17,23 @@
 #include "world/Noise.hpp"
 #include "world/WorldGen.hpp"
 #include <random>
+#include <xmmintrin.h> // For _mm_getcsr
+
+void PrintFPUState(const char *stage) {
+  unsigned int csr = _mm_getcsr();
+  std::cout << "[FPU CHECK] " << stage << " MXCSR: " << std::hex << csr
+            << std::dec << std::endl;
+
+  if (csr & 0x8000)
+    std::cout << "  -> FTZ (Flush To Zero) is ON" << std::endl;
+  else
+    std::cout << "  -> FTZ is OFF (Correct)" << std::endl;
+
+  if (csr & 0x0040)
+    std::cout << "  -> DAZ (Denormals Are Zero) is ON" << std::endl;
+  else
+    std::cout << "  -> DAZ is OFF (Correct)" << std::endl;
+}
 
 Camera *g_Camera = nullptr;
 
@@ -26,6 +43,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
 }
 
 int main() {
+  PrintFPUState("Start of Main");
   std::cout << "[ProjectBeta] Starting..." << std::endl;
   MathHelper::Init();
 
@@ -47,6 +65,8 @@ int main() {
   RenderBackend renderer;
   if (!renderer.Init(window))
     return -1;
+
+  PrintFPUState("After Engine Init");
 
   std::cout << "[WorldGen] Starting World Generation..." << std::endl;
 
@@ -85,6 +105,30 @@ int main() {
     for (int z = -radius; z < radius; ++z) {
       Chunk chunk(x, z);
       worldGen.generateChunk(chunk);
+      // --- DEBUG: Check Clone Column (0,0) ---
+      if (x == 0 && z == 0) {
+        std::cout << "=== CLONE CHUNK (0,0) INSPECTION ===" << std::endl;
+
+        // Check Sandstone at 59
+        int block59 = chunk.getBlock(0, 59, 0);
+        std::cout << "Block at (0, 59, 0): " << block59
+                  << (block59 == 24 ? " (Sandstone)" : " (Other)") << std::endl;
+
+        // Count Non-Air above
+        int nonAirCount = 0;
+        std::cout << "Blocks above 59:" << std::endl;
+        for (int y = 60; y < 128; ++y) {
+          int b = chunk.getBlock(0, y, 0);
+          if (b != 0) {
+            std::cout << "  y=" << y << " ID=" << b << std::endl;
+            nonAirCount++;
+          }
+        }
+        std::cout << "Total Non-Air blocks above 59: " << nonAirCount
+                  << std::endl;
+        std::cout << "====================================" << std::endl;
+      }
+      // ----------------------------------------
       chunks.push_back(chunk);
     }
   }
@@ -130,6 +174,331 @@ int main() {
     }
     totalVerts += mesh.size();
   }
+
+  // --- DEBUG: VISUALIZE THE SANDSTONES ON 0, 0 ---
+  //
+  // This corresponds to the block where C++ says "Sandstone Generated"
+
+  for (const auto &chunk : chunks) {
+    if (chunk.chunkX == 0 && chunk.chunkZ == 0) {
+      // Scan Column 0,0 for Sandstone
+      for (int y = 0; y < 128; ++y) {
+        if (chunk.getBlock(0, y, 0) == 24) { // 24 = Sandstone
+          std::cout << "[Visualizer] Found Sandstone at y=" << y
+                    << " -> Drawing Red Box" << std::endl;
+
+          float bx = 0.0f;
+          float by = (float)y;
+          float bz = 0.0f;
+
+          // Standard cube vertices for the Red Box
+          float redCube[] = {
+              // Front
+              bx,
+              by,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by + 1,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by + 1,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by + 1,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              // Back
+              bx + 1,
+              by,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by + 1,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by + 1,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by + 1,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              // Top
+              bx,
+              by + 1,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by + 1,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by + 1,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by + 1,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by + 1,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by + 1,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              // Bottom
+              bx,
+              by,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              // Right
+              bx + 1,
+              by,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by + 1,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by + 1,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx + 1,
+              by + 1,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              // Left
+              bx,
+              by,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by + 1,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by + 1,
+              bz + 1,
+              0,
+              0,
+              1,
+              0,
+              0,
+              bx,
+              by + 1,
+              bz,
+              0,
+              0,
+              1,
+              0,
+              0,
+          };
+
+          for (float f : redCube) {
+            rawVertices.push_back(f);
+          }
+          totalVerts += 36;
+        }
+      }
+    }
+  }
+  // ----------------------------------------------------------------
+
   std::cout << "[Meshing] Generated " << totalVerts << " vertices across "
             << chunks.size() << " chunks." << std::endl;
 
