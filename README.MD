@@ -11,6 +11,12 @@ This project relies heavily on **[RetroMCP-Java](https://github.com/MCPHackers/R
 *   All Java source code references, mapping names (like `func_4058_a`), and logic comparisons are based on the RetroMCP decompilation of Beta 1.7.3.
 *   If you want to contribute or check the logic, you **need** to decompile the game using RetroMCP to understand what this project is matching against.
 
+## The Test Context (Seed -100)
+
+**CRITICAL NOTE:** The current build is **hardcoded to Seed -100**. 
+
+I used this specific seed as a scientific control for all programmatic parity checks. All observations below regarding specific coordinates, block heights, or "Sandstone anomalies" refer specifically to how this seed generates in the original game versus this port.
+
 ## Current State
 
 ### What Works / Matches Visually
@@ -39,9 +45,6 @@ To help debug the generation, I've included a `src/tools/` folder.
 
 *   **Java Debugs:** These are `.java` files that need to be compiled against the RetroMCP source. They dump raw values (RNG outputs, Noise arrays) from the original game.
 *   **C++ Tests:** These are standalone C++ programs that run specific parts of the generation logic (like `TestDecisions.cpp`) to compare against the Java output.
-
-**Note:** The current build is **hardcoded to Seed -100**. 
-I used this seed for all programmatic parity checks. 
 
 **Note on Verification:**
 The `src/tools/WorldVerifier.cpp` tool is hardcoded to look for region files in a specific path on my local machine. The `DebugWorld` folder in this repo is currently empty. If you want to run the verifier, you must provide your own Beta 1.7.3 region files and update the path in the code.
