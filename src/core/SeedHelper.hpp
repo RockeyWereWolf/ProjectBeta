@@ -6,15 +6,16 @@ static int64_t parseSeed(const std::string &str) {
 
   try {
     size_t idx;
-    int64_t val = std::stoll(str, &idx);
+    long long val = std::stoll(str, &idx);
     if (idx == str.length())
-      return val;
+      return (int64_t)val;
   } catch (...) {
   }
 
-  int64_t h = 0;
+  int32_t h = 0;
   for (char c : str) {
     h = 31 * h + c;
   }
-  return h;
+
+  return (int64_t)h;
 }
