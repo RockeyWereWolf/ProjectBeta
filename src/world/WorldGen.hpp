@@ -7,7 +7,7 @@
 #include "Noise.hpp"
 #include "WorldGenMinable.hpp"
 #include "WorldGenTrees.hpp"
-#include <cmath>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <vector>
@@ -511,114 +511,128 @@ public:
   }
 
   void generateCaves(class Chunk &chunk) {
-    int chunkX = chunk.chunkX;
-    int chunkZ = chunk.chunkZ;
     int range = 8;
+    JavaRandom masterRand(worldSeed);
 
-    JavaRandom baseRand(worldSeed);
-    long r1 = baseRand.nextLong() / 2 * 2 + 1;
-    long r2 = baseRand.nextLong() / 2 * 2 + 1;
+    int64_t r1 = (masterRand.nextLong() / 2L) * 2L + 1L;
+    int64_t r2 = (masterRand.nextLong() / 2L) * 2L + 1L;
 
-    for (int cx = chunkX - range; cx <= chunkX + range; ++cx) {
-      for (int cz = chunkZ - range; cz <= chunkZ + range; ++cz) {
-        long chunkSeed = (long)cx * r1 + (long)cz * r2 ^ worldSeed;
-        JavaRandom caveRand(chunkSeed);
+    for (int cx = chunk.chunkX - range; cx <= chunk.chunkX + range; ++cx) {
+      for (int cz = chunk.chunkZ - range; cz <= chunk.chunkZ + range; ++cz) {
+        int64_t chunkSeed = (int64_t)cx * r1 + (int64_t)cz * r2 ^ worldSeed;
+        masterRand.setSeed(chunkSeed);
 
-        int numCaves =
-            caveRand.nextInt(caveRand.nextInt(caveRand.nextInt(40) + 1) + 1);
-        if (caveRand.nextInt(15) != 0)
+        int i1 = masterRand.nextInt(40);
+        int i2 = masterRand.nextInt(i1 + 1);
+        int numCaves = masterRand.nextInt(i2 + 1);
+
+        if (masterRand.nextInt(15) != 0)
           numCaves = 0;
 
         for (int i = 0; i < numCaves; ++i) {
-          double startX = cx * 16 + caveRand.nextInt(16);
-          double startY = caveRand.nextInt(caveRand.nextInt(120) + 8);
-          double startZ = cz * 16 + caveRand.nextInt(16);
+          double startX = cx * 16 + masterRand.nextInt(16);
+          double startY = masterRand.nextInt(masterRand.nextInt(120) + 8);
+          double startZ = cz * 16 + masterRand.nextInt(16);
 
           int numNodes = 1;
-          if (caveRand.nextInt(4) == 0) {
-            generateCaveNode(caveRand.nextLong(), chunk, startX, startY, startZ,
-                             1.0f + caveRand.nextFloat() * 6.0f);
-            numNodes += caveRand.nextInt(4);
+          if (masterRand.nextInt(4) == 0) {
+            float startNodeWidth = 1.0f + masterRand.nextFloat() * 6.0f;
+            int64_t nodeSeed = masterRand.nextLong();
+
+            generateCaveNode(nodeSeed, masterRand, chunk, startX, startY,
+                             startZ, startNodeWidth, 0.0f, 0.0f, -1, -1, 0.5);
+            numNodes += masterRand.nextInt(4);
           }
 
           for (int j = 0; j < numNodes; ++j) {
-            float yaw = caveRand.nextFloat() * 3.14159f * 2.0f;
-            float pitch = (caveRand.nextFloat() - 0.5f) * 2.0f / 8.0f;
-            float width = caveRand.nextFloat() * 2.0f + caveRand.nextFloat();
-            generateCaveNode(caveRand.nextLong(), chunk, startX, startY, startZ,
-                             width, yaw, pitch, 0, 0, 1.0);
+            float yaw =
+                masterRand.nextFloat() * MathHelper::MC_PI<float>() * 2.0f;
+            float pitch = (masterRand.nextFloat() - 0.5f) * 2.0f / 8.0f;
+
+            float w1 = masterRand.nextFloat();
+            float w2 = masterRand.nextFloat();
+            float width = w1 * 2.0f + w2;
+
+            generateCaveNode(masterRand.nextLong(), masterRand, chunk, startX,
+                             startY, startZ, width, yaw, pitch, 0, 0, 1.0);
           }
         }
       }
     }
   }
 
-  void generateCaveNode(long seed, class Chunk &chunk, double x, double y,
-                        double z, float width) {
-    generateCaveNode(seed, chunk, x, y, z, width, 0.0f, 0.0f, -1, -1, 0.5);
-  }
-
-  void generateCaveNode(long seed, class Chunk &chunk, double targetX,
-                        double targetY, double targetZ, float width, float yaw,
-                        float pitch, int curStep, int numSteps, double yScale) {
+  void generateCaveNode(int64_t nodeSeed, JavaRandom &masterRand,
+                        class Chunk &chunk, double targetX, double targetY,
+                        double targetZ, float width, float yaw, float pitch,
+                        int curStep, int numSteps, double yScale) {
     double centerX = chunk.chunkX * 16 + 8;
     double centerZ = chunk.chunkZ * 16 + 8;
-    float yawVal = 0.0f;
-    float pitchVal = 0.0f;
-    JavaRandom nodeRand(seed);
+    float yawChange = 0.0f;
+    float pitchChange = 0.0f;
+    JavaRandom nodeRand(nodeSeed);
 
     if (numSteps <= 0) {
       int stepRange = 8 * 16 - 16;
       numSteps = stepRange - nodeRand.nextInt(stepRange / 4);
     }
 
-    bool isWide = false;
+    bool isCentralNode = false;
     if (curStep == -1) {
       curStep = numSteps / 2;
-      isWide = true;
+      isCentralNode = true;
     }
 
-    int targetStep = nodeRand.nextInt(numSteps / 2) + numSteps / 4;
-    bool randomFlag = nodeRand.nextInt(6) == 0;
+    int splitPoint = nodeRand.nextInt(numSteps / 2) + numSteps / 4;
+    bool flatterTunnels = nodeRand.nextInt(6) == 0;
 
     for (; curStep < numSteps; ++curStep) {
-      double widthAtStep =
-          1.5 + MathHelper::sin((float)curStep * 3.14159f / (float)numSteps) *
-                    width * 1.0f;
+      float mc_pi_float = MathHelper::MC_PI<float>();
+      float sinInput = ((float)curStep * mc_pi_float) / (float)numSteps;
+
+      float rawWidth = MathHelper::sin(sinInput) * width;
+      double widthAtStep = 1.5 + (double)rawWidth;
       double heightAtStep = widthAtStep * yScale;
 
       float cosPitch = MathHelper::cos(pitch);
       float sinPitch = MathHelper::sin(pitch);
 
-      targetX += MathHelper::cos(yaw) * cosPitch;
-      targetY += sinPitch;
-      targetZ += MathHelper::sin(yaw) * cosPitch;
+      targetX += (double)(MathHelper::cos(yaw) * cosPitch);
+      targetY += (double)sinPitch;
+      targetZ += (double)(MathHelper::sin(yaw) * cosPitch);
 
-      if (randomFlag)
+      if (flatterTunnels)
         pitch *= 0.92f;
       else
         pitch *= 0.7f;
 
-      pitch += pitchVal * 0.1f;
-      yaw += yawVal * 0.1f;
-      pitchVal *= 0.9f;
-      yawVal *= 0.75f;
-      pitchVal += (nodeRand.nextFloat() - nodeRand.nextFloat()) *
-                  nodeRand.nextFloat() * 2.0f;
-      yawVal += (nodeRand.nextFloat() - nodeRand.nextFloat()) *
-                nodeRand.nextFloat() * 4.0f;
+      pitch += pitchChange * 0.1f;
+      yaw += yawChange * 0.1f;
+      pitchChange *= 0.9f;
+      yawChange *= 0.75f;
 
-      if (!isWide && curStep == targetStep && width > 1.0f && numSteps > 0) {
-        generateCaveNode(nodeRand.nextLong(), chunk, targetX, targetY, targetZ,
-                         nodeRand.nextFloat() * 0.5f + 0.5f, yaw - 1.57f,
-                         pitch / 3.0f, curStep, numSteps, 1.0);
-        generateCaveNode(nodeRand.nextLong(), chunk, targetX, targetY, targetZ,
-                         nodeRand.nextFloat() * 0.5f + 0.5f, yaw + 1.57f,
-                         pitch / 3.0f, curStep, numSteps, 1.0);
+      float r1 = nodeRand.nextFloat();
+      float r2 = nodeRand.nextFloat();
+      float r3 = nodeRand.nextFloat();
+      pitchChange += (r1 - r2) * r3 * 2.0f;
+
+      float r4 = nodeRand.nextFloat();
+      float r5 = nodeRand.nextFloat();
+      float r6 = nodeRand.nextFloat();
+      yawChange += (r4 - r5) * r6 * 4.0f;
+
+      if (!isCentralNode && curStep == splitPoint && width > 1.0f) {
+        generateCaveNode(masterRand.nextLong(), masterRand, chunk, targetX,
+                         targetY, targetZ, nodeRand.nextFloat() * 0.5f + 0.5f,
+                         yaw - mc_pi_float * 0.5f, pitch / 3.0f, curStep,
+                         numSteps, 1.0);
+        generateCaveNode(masterRand.nextLong(), masterRand, chunk, targetX,
+                         targetY, targetZ, nodeRand.nextFloat() * 0.5f + 0.5f,
+                         yaw + mc_pi_float * 0.5f, pitch / 3.0f, curStep,
+                         numSteps, 1.0);
         return;
       }
 
-      if (isWide || nodeRand.nextInt(4) != 0) {
+      if (isCentralNode || nodeRand.nextInt(4) != 0) {
         double dx = targetX - centerX;
         double dz = targetZ - centerZ;
         double stepsRem = numSteps - curStep;
@@ -679,23 +693,34 @@ public:
                 double blockRelZ =
                     ((double)(bz + chunk.chunkZ * 16) + 0.5 - targetZ) /
                     widthAtStep;
+
                 if (blockRelX * blockRelX + blockRelZ * blockRelZ < 1.0) {
+                  bool hitGrass = false;
+
                   for (int by = maxY - 1; by >= minY; --by) {
                     double blockRelY =
                         ((double)by + 0.5 - targetY) / heightAtStep;
+
                     if (blockRelY > -0.7 && blockRelX * blockRelX +
                                                     blockRelY * blockRelY +
                                                     blockRelZ * blockRelZ <
                                                 1.0) {
+
                       int existing = chunk.getBlock(bx, by, bz);
+
+                      if (existing == 2) {
+                        hitGrass = true;
+                      }
+
                       if (existing == 1 || existing == 3 || existing == 2) {
-                        if (by < 10)
-                          chunk.setBlock(bx, by, bz, 11);
-                        else {
+                        if (by < 10) {
+                          chunk.setBlock(bx, by, bz, 10);
+                        } else {
                           chunk.setBlock(bx, by, bz, 0);
-                          if (existing == 2 &&
-                              chunk.getBlock(bx, by - 1, bz) == 3)
+
+                          if (hitGrass && chunk.getBlock(bx, by - 1, bz) == 3) {
                             chunk.setBlock(bx, by - 1, bz, 2);
+                          }
                         }
                       }
                     }
@@ -703,7 +728,7 @@ public:
                 }
               }
             }
-            if (isWide)
+            if (isCentralNode)
               break;
           }
         }
