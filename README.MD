@@ -31,7 +31,7 @@ I used this specific seed as a scientific control for all programmatic parity ch
     *   **Java Observation:** In the real game, digging reveals **5 blocks of sand** above the sandstone.
     *   **The Ambiguity:**
         *   *If the WorldVerifier is correct:* It reports Java Sandstone at `y=58`. This implies Java Surface is `63` (58+5). In this case, **both Surface and Sandstone heights match perfectly**.
-        *   *If [Minecraft Forums](https://www.minecraftforum.net/forums/minecraft-java-edition/survival-mode/213768-do-you-fence-in-your-minecraft-yard-poll?page=2) (F3 logic) are correct:* F3 indicates standing on block `y=59`. This implies Java Surface is `64` (59+5). In this case, **the C++ terrain generated 1 block too low**.
+        *   *If [Minecraft Forums](https://www.minecraftforum.net/forums/minecraft-java-edition/survival-mode/220241-quick-question-about-f3) (F3 logic) are correct:* F3 indicates standing on block `y=59`. This implies Java Surface is `64` (59+5). In this case, **the C++ terrain generated 1 block too low**.(Messages from FinalMinuet)
 
     **Caves:** Math and RNG are verified to match Java, but rasterization edge-cases (floating point flooring) cause some caves to generate their floor 1 block deeper or slightly wider than the original game.
         
@@ -39,7 +39,7 @@ I used this specific seed as a scientific control for all programmatic parity ch
     *   Grass/Sand transitions on beaches look a bit rougher/chaotic than vanilla.
     *   Clay is currently missing. Not implemented yet.
     *   Trees lack variety (no Big Trees implemented yet) and placement is sometimes off.
-    *   Caves generate but have slightly different shapes (tighter entrances) and positions.
+    *   Caves have very rare block selection issues.
 
 ## Debugging & Tools
 

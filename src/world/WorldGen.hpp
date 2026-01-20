@@ -689,6 +689,7 @@ public:
               double blockRelX =
                   ((double)(bx + chunk.chunkX * 16) + 0.5 - targetX) /
                   widthAtStep;
+
               for (int bz = minZ; bz < maxZ; ++bz) {
                 double blockRelZ =
                     ((double)(bz + chunk.chunkZ * 16) + 0.5 - targetZ) /
@@ -697,6 +698,7 @@ public:
                 if (blockRelX * blockRelX + blockRelZ * blockRelZ < 1.0) {
                   bool hitGrass = false;
 
+                  // some weird math to fix offset mismatches
                   for (int by = maxY - 1; by >= minY; --by) {
                     double blockRelY =
                         ((double)by + 0.5 - targetY) / heightAtStep;
@@ -706,20 +708,27 @@ public:
                                                     blockRelZ * blockRelZ <
                                                 1.0) {
 
-                      int existing = chunk.getBlock(bx, by, bz);
+                      // the same weird fix
+                      int carveY = by + 1;
+                      if (carveY > 127)
+                        continue;
+
+                      int existing = chunk.getBlock(bx, carveY, bz);
 
                       if (existing == 2) {
                         hitGrass = true;
                       }
 
                       if (existing == 1 || existing == 3 || existing == 2) {
-                        if (by < 10) {
-                          chunk.setBlock(bx, by, bz, 10);
+                        if (carveY < 10) {
+                          chunk.setBlock(bx, carveY, bz, 10);
                         } else {
-                          chunk.setBlock(bx, by, bz, 0);
+                          chunk.setBlock(bx, carveY, bz, 0);
 
-                          if (hitGrass && chunk.getBlock(bx, by - 1, bz) == 3) {
-                            chunk.setBlock(bx, by - 1, bz, 2);
+                          // revert weird fix
+                          if (hitGrass &&
+                              chunk.getBlock(bx, carveY - 1, bz) == 3) {
+                            chunk.setBlock(bx, carveY - 1, bz, 2);
                           }
                         }
                       }
