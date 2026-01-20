@@ -20,7 +20,7 @@ I used this specific seed as a scientific control for all programmatic parity ch
 ## Current State
 
 ### What Works / Matches Visually
-*   **Terrain Shape:** The overall hills, mountains, and valleys look identical to the original game.
+*   **Terrain:** The overall hills, mountains, and valleys look identical to the original game.
 *   **Biome Map:** Biomes seem to be placed correctly using the original lookup textures.
 *   **Noise Math:** Ported the Perlin and Simplex noise algorithms, and they match Java's output to ~15 decimal places in isolation.
 *   **RNG Sync (`4 4 3 3`):** Previous concerns about the Stone Depth sequence (`4 4 3 3`) being a bug were proved wrong. Detailed Java debugging (`tools/DebugRealStoneDepth.java`) confirmed that the original game produces this exact sequence when Sandstone generation consumes random numbers. The C++ implementation correctly matches this behavior.
@@ -36,10 +36,8 @@ I used this specific seed as a scientific control for all programmatic parity ch
     **Caves:** Math and RNG are verified to match Java, but rasterization edge-cases (floating point flooring) cause some caves to generate their floor 1 block deeper or slightly wider than the original game.
         
 *   **Decorations:**
-    *   Grass/Sand transitions on beaches look a bit rougher/chaotic than vanilla.
     *   Clay is currently missing. Not implemented yet.
     *   Trees lack variety (no Big Trees implemented yet) and placement is sometimes off.
-    *   Caves have very rare block selection issues.
 
 ## Debugging & Tools
 

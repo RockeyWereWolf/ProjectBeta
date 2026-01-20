@@ -97,21 +97,6 @@ public:
     for (int x = 0; x < sizeX; ++x) {
       for (int z = 0; z < sizeZ; ++z) {
 
-        // --- DEBUG START ---
-        if (chunkX == 0 && chunkZ == 0 && x == 0 && z == 0) {
-          std::cout << "=== C++ DENSITY INPUTS (0,0) ===" << std::endl;
-          std::cout << std::fixed << std::setprecision(17);
-          std::cout << "Biome Temp:  " << biomeTempArray[biome2DIdx]
-                    << std::endl;
-          std::cout << "Biome Rain:  " << biomeRainArray[biome2DIdx]
-                    << std::endl;
-          std::cout << "Scale Noise: " << scaleNoiseArray[biome2DIdx]
-                    << std::endl;
-          std::cout << "Depth Noise: " << depthNoiseArray[biome2DIdx]
-                    << std::endl;
-        }
-        // --- DEBUG END ---
-
         double currentBiomeTemp = biomeTempArray[biome2DIdx];
         double currentBiomeRain = biomeRainArray[biome2DIdx];
 
@@ -178,19 +163,6 @@ public:
       }
     }
 
-    // --- ADD DEBUG PRINT HERE ---
-    if (chunkX == 0 && chunkZ == 0) {
-      std::cout << "=== C++ DENSITY OUTPUT CHECK ===" << std::endl;
-      std::cout << std::fixed << std::setprecision(20);
-
-      std::cout << "Density[0] (y=0):  " << density[0] << std::endl;
-      std::cout << "Density[7] (y=7):  " << density[7] << std::endl;
-      std::cout << "Density[8] (y=8):  " << density[8] << std::endl;
-      std::cout << "Density[9] (y=9):  " << density[9] << std::endl;
-      std::cout << "Density[16] (y=16): " << density[16] << std::endl;
-    }
-    // ----------------------------
-
     return density;
   }
 
@@ -214,41 +186,10 @@ public:
     valNoise.generate(stoneNoise.data(), chunkX * 16, chunkZ * 16, 0, 16, 16, 1,
                       scale * 2.0, scale * 2.0, 1.0);
 
-    if (isDebugChunk) {
-      std::cout << "=== C++ RNG PARITY CHECK (Chunk 0,0) ===" << std::endl;
-      std::cout << "--- Column (0,0) ---" << std::endl;
-      std::cout << std::fixed << std::setprecision(17);
-      double sandRNG = random.nextDouble();
-      std::cout << "1. Sand Check (nextDouble):      " << sandRNG << std::endl;
-      double gravelRNG = random.nextDouble();
-      std::cout << "2. Gravel Check (nextDouble):    " << gravelRNG
-                << std::endl;
-      double stoneRNG = random.nextDouble();
-      std::cout << "3. Stone Depth (nextDouble):     " << stoneRNG << std::endl;
-      int bedrockRNG_y5 = random.nextInt(5);
-      std::cout << "4. Bedrock y=5 (nextInt(5)):     " << bedrockRNG_y5
-                << std::endl;
-      int bedrockRNG_y4 = random.nextInt(5);
-      std::cout << "5. Bedrock y=4 (nextInt(5)):     " << bedrockRNG_y4
-                << std::endl;
-      int bedrockRNG_y3 = random.nextInt(5);
-      std::cout << "6. Bedrock y=3 (nextInt(5)):     " << bedrockRNG_y3
-                << std::endl;
-      int bedrockRNG_y2 = random.nextInt(5);
-      std::cout << "7. Bedrock y=2 (nextInt(5)):     " << bedrockRNG_y2
-                << std::endl;
-      int bedrockRNG_y1 = random.nextInt(5);
-      std::cout << "8. Bedrock y=1 (nextInt(5)):     " << bedrockRNG_y1
-                << std::endl;
+    for (int z = 0; z < 16; ++z) {
+      for (int x = 0; x < 16; ++x) {
 
-      random.setSeed((int64_t)chunkX * 341873128712L +
-                     (int64_t)chunkZ * 132897987541L);
-    }
-
-    for (int x = 0; x < 16; ++x) {
-      for (int z = 0; z < 16; ++z) {
-
-        int idx = x + z * 16;
+        int idx = x * 16 + z;
 
         double sandRnd = random.nextDouble();
         bool genSand = sandNoise[idx] + sandRnd * 0.2 > 0.0;
@@ -258,19 +199,6 @@ public:
 
         double stoneRnd = random.nextDouble();
         int stoneDepth = (int)(stoneNoise[idx] / 3.0 + 3.0 + stoneRnd * 0.25);
-
-        // DEBUG PRINT
-        if (chunkX == 0 && chunkZ == 0 && z == 0 && x < 4) {
-          std::cout << "Col (" << x << "," << z << "):" << std::endl;
-          std::cout << std::fixed << std::setprecision(17);
-          std::cout << "  Noise[S]: " << sandNoise[idx] << " Rnd: " << sandRnd
-                    << " -> Sand: " << genSand << std::endl;
-          std::cout << "  Noise[G]: " << gravelNoise[idx]
-                    << " Rnd: " << gravelRnd << " -> Gravel: " << genGravel
-                    << std::endl;
-          std::cout << "  Noise[D]: " << stoneNoise[idx] << " Rnd: " << stoneRnd
-                    << " -> Depth: " << stoneDepth << std::endl;
-        }
 
         int remainingDepth = -1;
 
@@ -323,16 +251,6 @@ public:
             } else if (remainingDepth > 0) {
               --remainingDepth;
               chunk.setBlock(x, y, z, fillerBlock);
-
-              if (remainingDepth == 0 && fillerBlock == 12) {
-                // DEBUG
-                if (isDebugChunk && x == 0 && z == 0) {
-                  std::cout << "DEBUG: Sandstone Generated at y=" << y
-                            << std::endl;
-                }
-                remainingDepth = random.nextInt(4);
-                fillerBlock = 24; // SandStone
-              }
             }
           }
         }
@@ -438,9 +356,6 @@ public:
       if (y > 0)
         WorldGenTrees().generate(world, chunkRand, x, y + 1, z);
     }
-    // check biome at 0,0
-    BiomeProperties b = biomeManager.getBiomeProps(0, 0);
-    std::cout << "C++ Biome at 0,0 ID: " << (int)b.id << std::endl;
   }
 
   void generateChunk(class Chunk &chunk) {
