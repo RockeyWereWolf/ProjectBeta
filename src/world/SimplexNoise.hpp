@@ -1,11 +1,15 @@
 #pragma once
 #include "../core/JavaRandom.hpp"
 #include <cmath>
+#include <iomanip>
+#include <iostream>
 #include <vector>
+
+static int simplexCount = 0;
 
 class SimplexNoise {
 private:
-  static constexpr double F2 = 0.5 * (1.7320508075688772 - 1.0); // sqrt(3.0)
+  static constexpr double F2 = 0.5 * (1.7320508075688772 - 1.0);
   static constexpr double G2 = (3.0 - 1.7320508075688772) / 6.0;
   static const int grad3[12][3];
   int p[512];
@@ -14,6 +18,8 @@ private:
 
 public:
   SimplexNoise(JavaRandom &rand) {
+
+    int id = simplexCount++;
     xo = rand.nextDouble() * 256.0;
     yo = rand.nextDouble() * 256.0;
     zo = rand.nextDouble() * 256.0;
@@ -30,8 +36,9 @@ public:
   }
 
   // Java's wrap/fastFloor
-  inline static int fastFloor(double x) { return x < 0 ? (int)x - 1 : (int)x; }
-
+  inline static int fastFloor(double x) {
+    return x > 0.0 ? (int)x : (int)x - 1;
+  }
   // dot product func_4114_a
   inline static double dot(const int *g, double x, double y) {
     return (double)g[0] * x + (double)g[1] * y;

@@ -430,21 +430,87 @@ public:
       WorldGenMinable(BlockID::LapisOre, 6).generate(world, chunkRand, x, y, z);
     }
 
-    double temp, rain;
-    biomeManager.getTempRain(globeX + 8, globeZ + 8, temp, rain);
-    BiomeID biome = biomeManager.getBiomeFromValues(temp, rain);
-    int treeCount = biomeManager.getTreesPerChunk(biome);
-    if (chunkRand.nextInt(10) == 0)
-      treeCount++;
+    // trees
+    std::vector<double> noiseBuf(2);
 
-    for (int i = 0; i < treeCount; ++i) {
-      int x = globeX + chunkRand.nextInt(16) + 8;
-      int z = globeZ + chunkRand.nextInt(16) + 8;
-      int y = 127;
-      while (y > 0 && world.getBlockId(x, y, z) == 0)
-        y--;
-      if (y > 0)
-        WorldGenTrees().generate(world, chunkRand, x, y + 1, z);
+    forestNoise.generate(noiseBuf.data(), (double)globeX, 0.0, (double)globeZ,
+                         1, 2, 1, 0.5, 1.0, 0.5);
+
+    double featureNoiseVal = noiseBuf[0];
+
+    double rngVal = chunkRand.nextDouble();
+    int baseTreeCount =
+        (int)((featureNoiseVal / 8.0 + rngVal * 4.0 + 4.0) / 3.0);
+
+    int treeCount = 0;
+
+    if (chunkRand.nextInt(10) == 0) {
+      treeCount++;
+    }
+
+    double temp, rain;
+    biomeManager.getTempRain(globeX + 16, globeZ + 16, temp, rain);
+    BiomeID biome = biomeManager.getBiomeFromValues(temp, rain);
+
+    if (biome == BiomeID::Taiga || biome == BiomeID::Rainforest ||
+        biome == BiomeID::Forest) {
+      treeCount += baseTreeCount + 5;
+    } else if (biome == BiomeID::SeasonalForest) {
+      treeCount += baseTreeCount + 2;
+    } else if (biome == BiomeID::Desert || biome == BiomeID::Tundra ||
+               biome == BiomeID::Plains) {
+      treeCount -= 20;
+    }
+
+    if (treeCount > 0) {
+      for (int i = 0; i < treeCount; ++i) {
+        int x = globeX + chunkRand.nextInt(16) + 8;
+        int z = globeZ + chunkRand.nextInt(16) + 8;
+        int y = 127;
+
+        while (y > 0 && world.getBlockId(x, y, z) == 0) {
+          y--;
+        }
+
+        bool generated = false;
+
+        if (biome == BiomeID::Taiga) {
+          if (chunkRand.nextInt(3) == 0) {
+            Spruce1TreeGenerator gen;
+            generated = gen.generate(world, chunkRand, x, y + 1, z);
+          } else {
+            Spruce2TreeGenerator gen;
+            generated = gen.generate(world, chunkRand, x, y + 1, z);
+          }
+        } else if (biome == BiomeID::Forest) {
+          if (chunkRand.nextInt(5) == 0) {
+            SimpleTreeGenerator gen(5, 2);
+            generated = gen.generate(world, chunkRand, x, y + 1, z);
+          } else if (chunkRand.nextInt(3) == 0) {
+            generated = WorldGenTrees::newBigNatural()->generate(
+                world, chunkRand, x, y + 1, z);
+          } else {
+            SimpleTreeGenerator gen(4, 0);
+            generated = gen.generate(world, chunkRand, x, y + 1, z);
+          }
+        } else if (biome == BiomeID::Rainforest) {
+          if (chunkRand.nextInt(3) == 0) {
+            generated = WorldGenTrees::newBigNatural()->generate(
+                world, chunkRand, x, y + 1, z);
+          } else {
+            SimpleTreeGenerator gen(4, 0);
+            generated = gen.generate(world, chunkRand, x, y + 1, z);
+          }
+        } else {
+          if (chunkRand.nextInt(10) == 0) {
+            generated = WorldGenTrees::newBigNatural()->generate(
+                world, chunkRand, x, y + 1, z);
+          } else {
+            SimpleTreeGenerator gen(4, 0);
+            generated = gen.generate(world, chunkRand, x, y + 1, z);
+          }
+        }
+      }
     }
   }
 

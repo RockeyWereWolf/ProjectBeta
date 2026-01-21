@@ -6,6 +6,8 @@
 #include <iostream>
 #include <vector>
 
+static int perlinInstanceCount = 0;
+
 class PerlinNoise {
 private:
   int permutations[512];
@@ -13,21 +15,18 @@ private:
 
 public:
   PerlinNoise(JavaRandom &rand) {
+    int id = perlinInstanceCount++; // Capture ID for this instance
     xCoord = rand.nextDouble() * 256.0;
     yCoord = rand.nextDouble() * 256.0;
     zCoord = rand.nextDouble() * 256.0;
 
-    // --- DEBUG PRINT START ---
-    static bool firstPrint = true;
-    if (firstPrint) {
-      firstPrint = false;
-      std::cout << "=== C++ PERLIN GEN 0 CHECK ===" << std::endl;
-      std::cout << std::fixed << std::setprecision(20);
+    if (id == 74) {
+      std::cout << "=== C++ FOREST NOISE SEED CHECK (ID 74) ===" << std::endl;
+      std::cout << std::fixed << std::setprecision(16);
       std::cout << "xCoord: " << xCoord << std::endl;
       std::cout << "yCoord: " << yCoord << std::endl;
       std::cout << "zCoord: " << zCoord << std::endl;
     }
-    // --- DEBUG PRINT END ---
 
     for (int i = 0; i < 256; ++i)
       permutations[i] = i;

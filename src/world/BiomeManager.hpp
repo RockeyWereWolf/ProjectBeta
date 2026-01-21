@@ -72,8 +72,6 @@ private:
 
 public:
   BiomeManager(int64_t seed) {
-    // Use separate Random instances for each generator, exactly like
-    // WorldChunkManager.java
 
     JavaRandom tempRand(seed * 9871L);
     tempNoise = new SimplexOctaves(tempRand, 4);
@@ -98,12 +96,9 @@ public:
     delete[] detailArray;
   }
 
-  // PRECISE IMPLEMENTATION of WorldChunkManager.loadBlockGeneratorData
   void getBiomeDataForRegion(double *tempOutput, double *rainOutput, int startX,
                              int startZ, int sizeX, int sizeZ) {
-    // Allocate the detail array if needed
-    if (detailArray == nullptr ||
-        (sizeX * sizeZ) > 1) { // A bit of safety, assumes 1 is the default
+    if (detailArray == nullptr || (sizeX * sizeZ) > 1) {
       delete[] detailArray;
       detailArray = new double[sizeX * sizeZ];
     }
@@ -120,11 +115,11 @@ public:
     for (int i = 0; i < sizeX; ++i) {
       for (int j = 0; j < sizeZ; ++j) {
         double detail = detailArray[idx] * 1.1 + 0.5;
-        double epsilon = 0.01;
-        double invEpsilon = 1.0 - epsilon;
+        double epsilonTemp = 0.01;
+        double invEpsilonTemp = 1.0 - epsilonTemp;
 
-        double t =
-            (tempOutput[idx] * 0.15 + 0.7) * invEpsilon + detail * epsilon;
+        double t = (tempOutput[idx] * 0.15 + 0.7) * invEpsilonTemp +
+                   detail * epsilonTemp;
         t = 1.0 - (1.0 - t) * (1.0 - t);
         if (t < 0.0)
           t = 0.0;
@@ -132,8 +127,11 @@ public:
           t = 1.0;
         tempOutput[idx] = t;
 
-        double r =
-            (rainOutput[idx] * 0.15 + 0.5) * invEpsilon + detail * epsilon;
+        double epsilonRain = 0.002;
+        double invEpsilonRain = 1.0 - epsilonRain;
+
+        double r = (rainOutput[idx] * 0.15 + 0.5) * invEpsilonRain +
+                   detail * epsilonRain;
         if (r < 0.0)
           r = 0.0;
         if (r > 1.0)
@@ -184,17 +182,22 @@ public:
                                    0.5882352941176471);
 
     double detail = detailArray[0] * 1.1 + 0.5;
-    double epsilon = 0.01;
-    double invEpsilon = 1.0 - epsilon;
+    double epsilonTemp = 0.01;
+    double invEpsilonTemp = 1.0 - epsilonTemp;
 
-    double t = (tempArray[0] * 0.15 + 0.7) * invEpsilon + detail * epsilon;
+    double t =
+        (tempArray[0] * 0.15 + 0.7) * invEpsilonTemp + detail * epsilonTemp;
     t = 1.0 - (1.0 - t) * (1.0 - t);
     if (t < 0)
       t = 0;
     if (t > 1)
       t = 1;
 
-    double r = (rainArray[0] * 0.15 + 0.5) * invEpsilon + detail * epsilon;
+    double epsilonRain = 0.002;
+    double invEpsilonRain = 1.0 - epsilonRain;
+
+    double r =
+        (rainArray[0] * 0.15 + 0.5) * invEpsilonRain + detail * epsilonRain;
     if (r < 0)
       r = 0;
     if (r > 1)
@@ -205,28 +208,35 @@ public:
   }
 
   BiomeID getBiomeFromValues(double temp, double rain) {
-    rain *= temp;
-    if (temp < 0.1)
+    int iTemp = (int)(temp * 63.0);
+    int iRain = (int)(rain * 63.0);
+
+    double t = (double)iTemp / 63.0;
+    double r = (double)iRain / 63.0;
+
+    r *= t;
+
+    if (t < 0.1)
       return BiomeID::Tundra;
-    if (rain < 0.2) {
-      if (temp < 0.5)
+    if (r < 0.2) {
+      if (t < 0.5)
         return BiomeID::Tundra;
-      if (temp < 0.95)
+      if (t < 0.95)
         return BiomeID::Savanna;
       return BiomeID::Desert;
     }
-    if (rain > 0.5 && temp < 0.7)
+    if (r > 0.5 && t < 0.7)
       return BiomeID::Swampland;
-    if (temp < 0.5)
+    if (t < 0.5)
       return BiomeID::Taiga;
-    if (temp < 0.97) {
-      if (rain < 0.35)
+    if (t < 0.97) {
+      if (r < 0.35)
         return BiomeID::Shrubland;
       return BiomeID::Forest;
     }
-    if (rain < 0.45)
+    if (r < 0.45)
       return BiomeID::Plains;
-    if (rain < 0.9)
+    if (r < 0.9)
       return BiomeID::SeasonalForest;
     return BiomeID::Rainforest;
   }
