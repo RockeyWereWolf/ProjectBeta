@@ -5,6 +5,8 @@
 #include "Chunk.hpp"
 #include "MathHelper.hpp"
 #include "Noise.hpp"
+#include "WorldGenDungeons.hpp"
+#include "WorldGenLakes.hpp"
 #include "WorldGenMinable.hpp"
 #include "WorldGenTrees.hpp"
 #include <fstream>
@@ -308,39 +310,105 @@ public:
     int globeX = chunkX * 16;
     int globeZ = chunkZ * 16;
 
-    for (int i = 0; i < 20; i++)
-      WorldGenMinable(BlockID::CoalOre, 16)
-          .generate(world, chunkRand, globeX + chunkRand.nextInt(16),
-                    chunkRand.nextInt(128), globeZ + chunkRand.nextInt(16));
-    for (int i = 0; i < 20; i++)
-      WorldGenMinable(BlockID::IronOre, 8)
-          .generate(world, chunkRand, globeX + chunkRand.nextInt(16),
-                    chunkRand.nextInt(64), globeZ + chunkRand.nextInt(16));
-    for (int i = 0; i < 2; i++)
-      WorldGenMinable(BlockID::GoldOre, 8)
-          .generate(world, chunkRand, globeX + chunkRand.nextInt(16),
-                    chunkRand.nextInt(32), globeZ + chunkRand.nextInt(16));
-    for (int i = 0; i < 8; i++)
+    // lakes water
+    if (chunkRand.nextInt(4) == 0) {
+      int x = globeX + chunkRand.nextInt(16) + 8;
+      int y = chunkRand.nextInt(128);
+      int z = globeZ + chunkRand.nextInt(16) + 8;
+      WorldGenLakes(8).generate(world, chunkRand, x, y, z);
+    }
+
+    // lakes lava
+    if (chunkRand.nextInt(8) == 0) {
+      int x = globeX + chunkRand.nextInt(16) + 8;
+
+      int v = chunkRand.nextInt(120);
+      int y = chunkRand.nextInt(v + 8);
+
+      int z = globeZ + chunkRand.nextInt(16) + 8;
+
+      if (y < 64 || chunkRand.nextInt(10) == 0) {
+        WorldGenLakes(10).generate(world, chunkRand, x, y, z);
+      }
+    }
+    // dungeons
+    for (int j = 0; j < 8; j++) {
+      int x = globeX + chunkRand.nextInt(16) + 8;
+      int y = chunkRand.nextInt(128);
+      int z = globeZ + chunkRand.nextInt(16) + 8;
+      WorldGenDungeons().generate(world, chunkRand, x, y, z);
+    }
+
+    // clay
+    for (int i = 0; i < 10; i++) {
+      int x = globeX + chunkRand.nextInt(16);
+      int y = chunkRand.nextInt(128);
+      int z = globeZ + chunkRand.nextInt(16);
+      int matId = world.getBlockId(x, y, z);
+      if (matId == 8 || matId == 9) {
+        WorldGenMinable(82, 32, 12).generate(world, chunkRand, x, y, z);
+      }
+    }
+
+    // dirt and gravel
+    for (int i = 0; i < 20; i++) {
+      int x = globeX + chunkRand.nextInt(16);
+      int y = chunkRand.nextInt(128);
+      int z = globeZ + chunkRand.nextInt(16);
+      WorldGenMinable(BlockID::Dirt, 32).generate(world, chunkRand, x, y, z);
+    }
+    for (int i = 0; i < 10; i++) {
+      int x = globeX + chunkRand.nextInt(16);
+      int y = chunkRand.nextInt(128);
+      int z = globeZ + chunkRand.nextInt(16);
+      WorldGenMinable(BlockID::Gravel, 32).generate(world, chunkRand, x, y, z);
+    }
+
+    // ores
+    for (int i = 0; i < 20; i++) {
+      int x = globeX + chunkRand.nextInt(16);
+      int y = chunkRand.nextInt(128);
+      int z = globeZ + chunkRand.nextInt(16);
+      WorldGenMinable(BlockID::CoalOre, 16).generate(world, chunkRand, x, y, z);
+    }
+
+    for (int i = 0; i < 20; i++) {
+      int x = globeX + chunkRand.nextInt(16);
+      int y = chunkRand.nextInt(64);
+      int z = globeZ + chunkRand.nextInt(16);
+      WorldGenMinable(BlockID::IronOre, 8).generate(world, chunkRand, x, y, z);
+    }
+
+    for (int i = 0; i < 2; i++) {
+      int x = globeX + chunkRand.nextInt(16);
+      int y = chunkRand.nextInt(32);
+      int z = globeZ + chunkRand.nextInt(16);
+      WorldGenMinable(BlockID::GoldOre, 8).generate(world, chunkRand, x, y, z);
+    }
+
+    for (int i = 0; i < 8; i++) {
+      int x = globeX + chunkRand.nextInt(16);
+      int y = chunkRand.nextInt(16);
+      int z = globeZ + chunkRand.nextInt(16);
       WorldGenMinable(BlockID::RedstoneOre, 7)
-          .generate(world, chunkRand, globeX + chunkRand.nextInt(16),
-                    chunkRand.nextInt(16), globeZ + chunkRand.nextInt(16));
-    for (int i = 0; i < 1; i++)
+          .generate(world, chunkRand, x, y, z);
+    }
+
+    for (int i = 0; i < 1; i++) {
+      int x = globeX + chunkRand.nextInt(16);
+      int y = chunkRand.nextInt(16);
+      int z = globeZ + chunkRand.nextInt(16);
       WorldGenMinable(BlockID::DiamondOre, 7)
-          .generate(world, chunkRand, globeX + chunkRand.nextInt(16),
-                    chunkRand.nextInt(16), globeZ + chunkRand.nextInt(16));
-    for (int i = 0; i < 1; i++)
-      WorldGenMinable(BlockID::LapisOre, 6)
-          .generate(world, chunkRand, globeX + chunkRand.nextInt(16),
-                    chunkRand.nextInt(16) + chunkRand.nextInt(16),
-                    globeZ + chunkRand.nextInt(16));
-    for (int i = 0; i < 20; i++)
-      WorldGenMinable(BlockID::Dirt, 32)
-          .generate(world, chunkRand, globeX + chunkRand.nextInt(16),
-                    chunkRand.nextInt(128), globeZ + chunkRand.nextInt(16));
-    for (int i = 0; i < 10; i++)
-      WorldGenMinable(BlockID::Gravel, 32)
-          .generate(world, chunkRand, globeX + chunkRand.nextInt(16),
-                    chunkRand.nextInt(128), globeZ + chunkRand.nextInt(16));
+          .generate(world, chunkRand, x, y, z);
+    }
+
+    // lapis (special y logic)
+    for (int i = 0; i < 1; i++) {
+      int x = globeX + chunkRand.nextInt(16);
+      int z = globeZ + chunkRand.nextInt(16);
+      int y = chunkRand.nextInt(16) + chunkRand.nextInt(16);
+      WorldGenMinable(BlockID::LapisOre, 6).generate(world, chunkRand, x, y, z);
+    }
 
     double temp, rain;
     biomeManager.getTempRain(globeX + 8, globeZ + 8, temp, rain);

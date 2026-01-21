@@ -1,13 +1,13 @@
 #pragma once
 #include <cmath>
-#include <vector>
 
 class MathHelper {
 private:
-  static float SIN_TABLE[65536];
   static bool initialized;
 
 public:
+  static float SIN_TABLE[65536];
+
   static void Init() {
     if (initialized)
       return;
@@ -36,6 +36,10 @@ public:
   }
 
   static double lerp(double t, double a, double b) { return a + t * (b - a); }
+
+  template <typename T> static constexpr T MC_PI() {
+    return T(3.14159265358979323846L);
+  }
 };
 
 float MathHelper::SIN_TABLE[65536];
