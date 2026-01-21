@@ -283,7 +283,23 @@ public:
       return chunks[idx].getBlock(lx, y, lz);
     }
 
-    void setBlock(int x, int y, int z, int id) override {
+    int getBlockMeta(int x, int y, int z) override {
+      int cx = x >> 4;
+      int cz = z >> 4;
+      int lx = x & 15;
+      int lz = z & 15;
+      int gridWidth = radius * 2;
+      int idx = (cx + radius) * gridWidth + (cz + radius);
+
+      if (idx < 0 || idx >= chunks.size())
+        return 0;
+      if (chunks[idx].chunkX != cx || chunks[idx].chunkZ != cz)
+        return 0;
+
+      return chunks[idx].getData(lx, y, lz);
+    }
+
+    void setBlock(int x, int y, int z, int id, int meta) override {
       int cx = x >> 4;
       int cz = z >> 4;
       int lx = x & 15;
@@ -295,7 +311,11 @@ public:
         return;
       if (chunks[idx].chunkX != cx || chunks[idx].chunkZ != cz)
         return;
-      chunks[idx].setBlock(lx, y, lz, (uint8_t)id);
+
+      chunks[idx].setBlock(lx, y, lz, (uint8_t)id, (uint8_t)meta);
+    }
+    void setBlock(int x, int y, int z, int id) override {
+      setBlock(x, y, z, id, 0);
     }
   };
 

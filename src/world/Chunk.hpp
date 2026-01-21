@@ -117,7 +117,7 @@ struct Vertex {
 class Chunk {
 public:
   uint8_t blocks[CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH];
-  // Metadata (nibbles) would go here later (metadata[size/2])
+  uint8_t metadata[CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH];
 
   int chunkX, chunkZ;
 
@@ -125,6 +125,8 @@ public:
 
     for (int i = 0; i < CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH; i++)
       blocks[i] = 0;
+    for (int i = 0; i < CHUNK_WIDTH * CHUNK_HEIGHT * CHUNK_DEPTH; i++)
+      metadata[i] = 0;
   }
 
   inline int getIndex(int x, int y, int z) const {
@@ -138,12 +140,23 @@ public:
     return blocks[getIndex(x, y, z)];
   }
 
-  void setBlock(int x, int y, int z, uint8_t id) {
+  uint8_t getData(int x, int y, int z) const {
+    if (x < 0 || x >= CHUNK_WIDTH || z < 0 || z >= CHUNK_DEPTH || y < 0 ||
+        y >= CHUNK_HEIGHT)
+      return 0;
+    return metadata[getIndex(x, y, z)];
+  }
+
+  void setBlock(int x, int y, int z, uint8_t id, uint8_t meta) {
     if (x >= 0 && x < CHUNK_WIDTH && z >= 0 && z < CHUNK_DEPTH && y >= 0 &&
         y < CHUNK_HEIGHT) {
-      blocks[getIndex(x, y, z)] = id;
+      int idx = getIndex(x, y, z);
+      blocks[idx] = id;
+      metadata[idx] = meta;
     }
   }
+
+  void setBlock(int x, int y, int z, uint8_t id) { setBlock(x, y, z, id, 0); }
 
   // Naive Meshing
   void generateMesh(std::vector<Vertex> &vertices, const Chunk *nX = nullptr,
@@ -164,6 +177,7 @@ public:
         return pZ ? pZ->getBlock(bx, by, 0) : (uint8_t)0;
       return getBlock(bx, by, bz);
     };
+
     for (int x = 0; x < CHUNK_WIDTH; x++) {
       for (int z = 0; z < CHUNK_DEPTH; z++) {
         for (int y = 0; y < CHUNK_HEIGHT; y++) {
@@ -171,90 +185,133 @@ public:
           if (id == 0)
             continue;
 
+          uint8_t meta = getData(x, y, z); // READ METADATA
+
           float worldX = (float)(chunkX * 16 + x);
           float worldY = (float)y;
           float worldZ = (float)(chunkZ * 16 + z);
 
           // Determine Block Color
           float r = 1.0f, g = 1.0f, b = 1.0f;
-          if (id == 1) { // Stone (Grey)
+
+          if (id == BlockID::Stone) {
             r = 0.6f;
             g = 0.6f;
             b = 0.6f;
-          } else if (id == 2) { // Grass (Green)
+          } else if (id == BlockID::Grass) {
             r = 0.2f;
             g = 0.8f;
             b = 0.2f;
-          } else if (id == 3) { // Dirt (Brown)
+          } else if (id == BlockID::Dirt) {
             r = 0.5f;
             g = 0.35f;
             b = 0.1f;
-          } else if (id == 7) { // Bedrock (Dark Grey)
+          } else if (id == BlockID::Bedrock) {
             r = 0.2f;
             g = 0.2f;
             b = 0.2f;
-          } else if (id == 8 || id == 9) { // Water (Blue)
+          } else if (id == BlockID::Water || id == BlockID::StationaryWater) {
             r = 0.2f;
             g = 0.4f;
             b = 0.9f;
-          } else if (id == 10 || id == 11) { // Lava (Orange)
+          } else if (id == BlockID::Lava || id == BlockID::StationaryLava) {
             r = 1.0f;
             g = 0.4f;
             b = 0.0f;
-          } else if (id == 12) { // Sand (Pale Yellow)
+          } else if (id == BlockID::Sand) {
             r = 0.94f;
             g = 0.9f;
             b = 0.6f;
-          } else if (id == 13) { // Gravel (Grey)
+          } else if (id == BlockID::Gravel) {
             r = 0.6f;
             g = 0.6f;
             b = 0.6f;
-          } else if (id == 24) { // Sandstone (Yellowish Rock)
-            r = 0.8f;
-            g = 0.8f;
-            b = 0.6f;
+          } else if (id == BlockID::Sandstone) {
+            r = 0.86f;
+            g = 0.84f;
+            b = 0.65f;
           } else if (id == BlockID::CoalOre) {
-            r = 0.4f;
-            g = 0.4f;
-            b = 0.4f; // Dark Stone
+            r = 0.3f;
+            g = 0.3f;
+            b = 0.3f;
           } else if (id == BlockID::IronOre) {
             r = 0.8f;
             g = 0.7f;
-            b = 0.6f; // Brownish Stone
+            b = 0.6f;
           } else if (id == BlockID::GoldOre) {
             r = 1.0f;
             g = 0.9f;
-            b = 0.2f; // Gold
+            b = 0.2f;
           } else if (id == BlockID::DiamondOre) {
             r = 0.3f;
             g = 0.9f;
-            b = 0.8f; // Cyan
+            b = 0.8f;
           } else if (id == BlockID::RedstoneOre ||
                      id == BlockID::GlowingRedstoneOre) {
             r = 0.9f;
             g = 0.1f;
-            b = 0.1f; // Red
+            b = 0.1f;
           } else if (id == BlockID::LapisOre) {
             r = 0.1f;
             g = 0.2f;
-            b = 0.8f; // Blue
-          } else if (id == BlockID::Bedrock) {
-
-            r = 0.2f;
-            g = 0.2f;
-            b = 0.2f;
-          } else if (id == BlockID::Log) {
-            r = 0.4f;
-            g = 0.3f;
-            b = 0.1f; // Dark Brown
-          } else if (id == BlockID::Leaves) {
-            r = 0.2f;
+            b = 0.8f;
+          } else if (id == BlockID::Clay) {
+            r = 0.6f;
             g = 0.6f;
-            b = 0.1f; // Green
+            b = 0.75f;
+          } // Clay Color
+          else if (id == BlockID::MossyCobblestone) {
+            r = 0.35f;
+            g = 0.45f;
+            b = 0.35f;
+          } // Dungeon Walls
+          else if (id == BlockID::MobSpawner) {
+            r = 0.1f;
+            g = 0.1f;
+            b = 0.3f;
+          } // Dungeon Center
+          else if (id == BlockID::Chest) {
+            r = 0.6f;
+            g = 0.4f;
+            b = 0.1f;
           }
 
-          // Naive Culling
+          // --- TREES (Meta Dependent) ---
+          else if (id == BlockID::Log) {
+            if (meta == 0) {
+              r = 0.4f;
+              g = 0.3f;
+              b = 0.1f;
+            } // Oak (Brown)
+            else if (meta == 1) {
+              r = 0.25f;
+              g = 0.2f;
+              b = 0.1f;
+            } // Spruce (Dark)
+            else if (meta == 2) {
+              r = 0.9f;
+              g = 0.9f;
+              b = 0.85f;
+            } // Birch (White)
+          } else if (id == BlockID::Leaves) {
+            if (meta == 0) {
+              r = 0.2f;
+              g = 0.6f;
+              b = 0.1f;
+            } // Oak
+            else if (meta == 1) {
+              r = 0.15f;
+              g = 0.4f;
+              b = 0.15f;
+            } // Spruce (Darker)
+            else if (meta == 2) {
+              r = 0.4f;
+              g = 0.7f;
+              b = 0.3f;
+            } // Birch (Lighter)
+          }
 
+          // Naive Culling (Same as before)
           // TOP (+Y)
           if (y == CHUNK_HEIGHT - 1 || getBlock(x, y + 1, z) == 0) {
             addQuad(vertices, worldX, worldY + 1, worldZ, 0, 1, 0, 1.0f, r, g,
