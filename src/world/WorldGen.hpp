@@ -173,8 +173,6 @@ public:
     random.setSeed((int64_t)chunkX * 341873128712L +
                    (int64_t)chunkZ * 132897987541L);
 
-    bool isDebugChunk = (chunkX == 0 && chunkZ == 0);
-
     double scale = 0.03125;
 
     surfaceNoise.generate(sandNoise.data(), chunkX * 16, chunkZ * 16, 0, 16, 16,
@@ -251,6 +249,10 @@ public:
             } else if (remainingDepth > 0) {
               --remainingDepth;
               chunk.setBlock(x, y, z, fillerBlock);
+              if (remainingDepth == 0 && fillerBlock == 12) {
+                remainingDepth = random.nextInt(4);
+                fillerBlock = 24; // SandStone
+              }
             }
           }
         }
