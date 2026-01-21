@@ -47,6 +47,11 @@ int main() {
   std::cout << "[ProjectBeta] Starting..." << std::endl;
   MathHelper::Init();
 
+  std::cout << std::setprecision(20);
+
+  std::cout << "f32: " << MathHelper::MC_PI<float>()
+            << " f64: " << MathHelper::MC_PI<double>() << std::endl;
+
   if (!glfwInit())
     return -1;
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -84,13 +89,6 @@ int main() {
 
   // Override for testing functionality
   seed = -100;
-
-  // VERIFICATION
-  std::string regionPath =
-      "/home/rockeywerewolf/DevProjects/ProjectBeta/decomp/minecraft_any/game/"
-      "saves/checking/region/r.0.0.mcr";
-  // We check region 0,0 (Chunks 0..31, 0..31)
-  ParityVerifier::Verifier::verify(regionPath, seed, 0, 0);
 
   std::cout << "[WorldGen] Random Seed: " << seed << std::endl;
   WorldGen worldGen(seed);
@@ -139,6 +137,13 @@ int main() {
       worldGen.populate(chunks, radius, x, z);
     }
   }
+
+  std::string regionPath =
+      "/home/rockeywerewolf/DevProjects/ProjectBeta/decomp/minecraft_any/game/"
+      "saves/checking/region/r.0.0.mcr";
+
+  // Verify chunks against Region 0,0
+  ParityVerifier::Verifier::verify(regionPath, chunks, 0, 0);
 
   size_t totalVerts = 0;
   for (size_t i = 0; i < chunks.size(); ++i) {
@@ -519,10 +524,9 @@ int main() {
 
     if (currentFrame - lastTitleUpdate > 0.1f) {
       lastTitleUpdate = currentFrame;
-      std::string title =
-          "Project Beta | Pos: " + std::to_string((int)camera.position.x) +
-          ", " + std::to_string((int)camera.position.y) + ", " +
-          std::to_string((int)camera.position.z);
+      std::string title = " | Pos: " + std::to_string((int)camera.position.x) +
+                          ", " + std::to_string((int)camera.position.y) + ", " +
+                          std::to_string((int)camera.position.z);
       glfwSetWindowTitle(window, title.c_str());
     }
 
