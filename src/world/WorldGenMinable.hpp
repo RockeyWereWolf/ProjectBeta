@@ -1,7 +1,18 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ * SPDX-FileCopyrightText: © 2011 Mojang AB
+ *
+ * C++ implementation of ore vein (minable) generation.
+ * Uses the original line-interpolation algorithm to generate "blobs" of
+ * minerals such as Coal, Iron, Gold, Redstone, and Diamond.
+ *
+ * References decompiled code from Retro-MCP.
+ */
+
 #pragma once
 #include "Feature.hpp"
 #include "MathHelper.hpp"
-#include <cmath>
 
 class WorldGenMinable : public WorldGenerator {
 private:

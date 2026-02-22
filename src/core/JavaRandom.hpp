@@ -1,5 +1,11 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ *
+ * java.util.Random C++ port for a functional parity
+ */
+
 #pragma once
-#include <cmath>
 #include <cstdint>
 
 class JavaRandom {

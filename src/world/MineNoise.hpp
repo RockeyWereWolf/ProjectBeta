@@ -1,7 +1,15 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ * SPDX-FileCopyrightText: © 2011 Mojang AB
+ *
+ * C++ implementation of original game Perlin noise.
+ *
+ * References decompiled code from Retro-MCP.
+ */
+
 #pragma once
 #include "../core/JavaRandom.hpp"
-#include <cmath>
-#include <iostream>
 #include <vector>
 
 // port of NoiseGeneratorPerlin

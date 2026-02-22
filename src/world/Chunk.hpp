@@ -1,3 +1,13 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ * SPDX-FileCopyrightText: © 2011 Mojang AB (Block IDs & Chunk Structure)
+ *
+ * Core Chunk data structure and Block ID definitions.
+ *
+ * References decompiled code from Retro-MCP.
+ */
+
 #pragma once
 #include <cstdint>
 #include <vector>

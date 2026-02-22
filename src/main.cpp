@@ -1,3 +1,15 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ *
+ * Project Beta main entry point.
+ * Orchestrates Vulkan rendering (Diligent Engine), GLFW input, and the
+ * world generation lifecycle.
+ *
+ * Includes FPU state monitoring and real-time parity verification
+ * against original .mcr region files for technical "Seed -100" analysis.
+ */
+
 #include <GLFW/glfw3.h>
 #include <ctime>
 #include <iostream>
@@ -8,13 +20,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "core/JavaRandom.hpp"
 #include "core/SeedHelper.hpp"
 #include "renderer/Camera.hpp"
 #include "renderer/RenderBackend.hpp"
 #include "tools/WorldVerifier.hpp"
 #include "world/Chunk.hpp"
-#include "world/Noise.hpp"
 #include "world/WorldGen.hpp"
 #include <random>
 #include <xmmintrin.h> // For _mm_getcsr

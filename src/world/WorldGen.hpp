@@ -1,3 +1,13 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ * SPDX-FileCopyrightText: © 2011 Mojang AB
+ *
+ * Master world generation controller.
+ *
+ * References decompiled code from Retro-MCP.
+ */
+
 #pragma once
 
 #include "../core/JavaRandom.hpp"
@@ -9,9 +19,6 @@
 #include "WorldGenLakes.hpp"
 #include "WorldGenMinable.hpp"
 #include "WorldGenTrees.hpp"
-#include <fstream>
-#include <iomanip>
-#include <iostream>
 #include <vector>
 
 class WorldGen {

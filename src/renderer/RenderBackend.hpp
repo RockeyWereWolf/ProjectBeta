@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ *
+ * Vulkan rendering backend implementation using Diligent Engine.
+ */
+
 #pragma once
 
 #include "BasicMath.hpp"

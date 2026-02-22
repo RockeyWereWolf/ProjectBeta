@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ *
+ * Camera class for 3D navigation using GLFW and GLM.
+ */
+
 #pragma once
 #include <GLFW/glfw3.h>
 #define GLM_FORCE_RADIANS

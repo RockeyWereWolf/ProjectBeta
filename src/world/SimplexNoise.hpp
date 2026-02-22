@@ -1,11 +1,19 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ * SPDX-FileCopyrightText: © 2011 Mojang AB
+ *
+ * C++ implementation of original game Simplex Noise.
+ * Primarily used for generating Temperature and Rainfall (Biome) maps.
+ *
+ * Features Java-parity fastFloor and dot product calculations to ensure
+ * biome boundary accuracy against original game logic.
+ *
+ * References decompiled code from Retro-MCP.
+ */
+
 #pragma once
 #include "../core/JavaRandom.hpp"
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <vector>
-
-static int simplexCount = 0;
 
 class SimplexNoise {
 private:
@@ -19,7 +27,6 @@ private:
 public:
   SimplexNoise(JavaRandom &rand) {
 
-    int id = simplexCount++;
     xo = rand.nextDouble() * 256.0;
     yo = rand.nextDouble() * 256.0;
     zo = rand.nextDouble() * 256.0;

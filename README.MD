@@ -96,5 +96,9 @@ If you are trying to reproduce the build or the bugs, here is the machine I am b
     ./ProjectBeta
     ```
 
+## License
+
+This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+
 ---
 *Credits to Mojang for the original game and DiligentGraphics for the rendering engine.*

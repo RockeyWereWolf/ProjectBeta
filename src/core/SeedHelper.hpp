@@ -1,3 +1,10 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ *
+ * Java's String.hashCode() C++ port for a functional parity
+ */
+
 #pragma once
 #include <cstdint>
 #include <string>

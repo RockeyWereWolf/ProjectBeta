@@ -1,11 +1,16 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ *
+ * Compares C++ generated chunks against original
+ * game region (.mcr) files to ensure generation accuracy.
+ */
+
 #pragma once
 
 #include "../world/Chunk.hpp"
-#include "../world/WorldGen.hpp"
 #include <algorithm>
 #include <cstdio>
-#include <fstream>
-#include <iostream>
 #include <map>
 #include <string>
 #include <vector>

@@ -1,12 +1,19 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ * SPDX-FileCopyrightText: © 2011 Mojang AB
+ *
+ * C++ implementation of original game Perlin noise.
+ *
+ * Features specific "Bug Replication" regarding Y-gradient recalculation
+ * timing and manual floor handling to ensure perfect terrain parity.
+ *
+ * References decompiled code from Retro-MCP.
+ */
+
 #pragma once
 #include "../core/JavaRandom.hpp"
-#include "MathHelper.hpp"
-#include <cmath>
-#include <iomanip>
-#include <iostream>
 #include <vector>
-
-static int perlinInstanceCount = 0;
 
 class PerlinNoise {
 private:
@@ -15,18 +22,9 @@ private:
 
 public:
   PerlinNoise(JavaRandom &rand) {
-    int id = perlinInstanceCount++; // Capture ID for this instance
     xCoord = rand.nextDouble() * 256.0;
     yCoord = rand.nextDouble() * 256.0;
     zCoord = rand.nextDouble() * 256.0;
-
-    if (id == 74) {
-      std::cout << "=== C++ FOREST NOISE SEED CHECK (ID 74) ===" << std::endl;
-      std::cout << std::fixed << std::setprecision(16);
-      std::cout << "xCoord: " << xCoord << std::endl;
-      std::cout << "yCoord: " << yCoord << std::endl;
-      std::cout << "zCoord: " << zCoord << std::endl;
-    }
 
     for (int i = 0; i < 256; ++i)
       permutations[i] = i;
@@ -38,16 +36,6 @@ public:
       permutations[j] = temp;
       permutations[i + 256] = permutations[i];
     }
-    // --- DEBUG PRINT AFTER THE SHUFFLE ---
-    static bool firstPrintPerm = true;
-    if (firstPrintPerm) {
-      firstPrintPerm = false;
-      std::cout << "Perm[0..9]: ";
-      for (int i = 0; i < 10; i++)
-        std::cout << permutations[i] << " ";
-      std::cout << std::endl;
-    }
-    // --- DEBUG PRINT END ---
   }
 
   inline double lerp(double t, double a, double b) { return a + t * (b - a); }

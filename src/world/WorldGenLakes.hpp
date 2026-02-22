@@ -1,9 +1,18 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ * SPDX-FileCopyrightText: © 2011 Mojang AB
+ *
+ * C++ implementation of lake and liquid spring generation.
+ * Features the original "blob" interpolation for lake shapes and the
+ * specific "stone shell" logic for lava pools.
+ *
+ * References decompiled code from Retro-MCP.
+ */
+
 #pragma once
 #include "../core/JavaRandom.hpp"
 #include "Feature.hpp"
-#include "MathHelper.hpp"
-#include <cmath>
-#include <vector>
 
 class WorldGenLakes : public WorldGenerator {
 private:

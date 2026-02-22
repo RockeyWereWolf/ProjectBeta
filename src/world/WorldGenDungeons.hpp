@@ -1,8 +1,18 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+/*
+ * SPDX-FileCopyrightText: © 2026 RockeyWereWolf <werewolfoffers@protonmail.com>
+ * SPDX-FileCopyrightText: © 2011 Mojang AB
+ *
+ * C++ implementation of dungeon generation.
+ * For now serves as a simulation of RNG calls for chest loot and spawner
+ * entities to maintain seed synchronization with the original game.
+ *
+ * References decompiled code from Retro-MCP.
+ */
+
 #pragma once
 #include "../core/JavaRandom.hpp"
 #include "Feature.hpp"
-#include "MathHelper.hpp"
-#include <string>
 
 class WorldGenDungeons : public WorldGenerator {
 private:
